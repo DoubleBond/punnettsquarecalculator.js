@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>Punnett Square Calculator</title>
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!--<link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">-->
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+  <style type="text/css">
+  	/*CUSTOM CSS*/
+  	.input-trait {
+  		width: 100%;
+  	}
+
+  	#result-table{
+  		max-width: 100%;
+  		overflow: scroll;
+  	}
+  </style>
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container" id="intro-screen" style="display:none;">
+    <div class="row">
+      <div class="seven column" style="margin-top: 25%">
+      	<h2>Welcome</h2>
+        <h4>To the Punnett Square Calculator!</h4>
+      </div>
+    </div>
+  </div>
+
+	
+  <div class="container" id="main-screen" style="display:none;">
+	  <div class="row" style="margin-top:7%;">
+	  		<div class="tewlve columns">
+				<p><span style="font-size: 1.25em">Hello!</span> Since I found no punnette calculator that could go up to 10 traits, I've decided to make one :)</p>
+			</div>
+	  	</div>
+		<div class="row" >
+			<h2>Punnett Square Calculator</h2>
+		</div>
+  	
+  	<div class="row">
+		<div class="two columns">
+			<label>Punnett Size</label>
+			<select id="table-size">
+				<option value="1">2 x 2</option>
+				<option value="2" selected>4 x 4</option>
+				<option value="3">8 x 8</option>
+				<option value="0">Custom</option>
+			</select>
+		</div>
+		<div class="three columns" style="display: none;" id="custom-div">
+			<label>Custom</label>
+			<input type="text" id="custom-size" required placeholder="Number of Traits. eg 4">
+		</div>
+	
+  	</div>
+  	<div class="row">
+  		<div class="u-full-width">
+  			<label>Parent Traits</label>
+  			<table id="trait-table">
+  				<tr id="trait-header">
+  					<td></td>
+  					<td>Trait 1</td>
+  					<td>Trait 2</td>
+  				<tr>
+  				<tr id="trait-parent1">
+  					<td>Parent 1</td>
+  					<td><input type="text" class="parent1 input-trait" required value="BB"></td>
+  					<td><input type="text" class="parent1 input-trait" required value="Ee"></td>
+  				</tr>
+  				<tr id="trait-parent2">
+  					<td>Parent 2</td>
+  					<td><input type="text" class="parent2 input-trait" required value="Bb"></td>
+  					<td><input type="text" class="parent2 input-trait" required value="EE"></td>
+  				</tr>
+  			</table>
+  			<button id="Calculate-Btn">Calculate!</button>
+  		</div>
+  	</div>
+  	<div class="row" id="result-div" style="display: none; margin-top: 25px">
+  		<div class="two columns">
+  			<label>Statistics</label>
+			<ul id="result-stats">
+				
+			</ul>
+  		</div>
+  		<div class="ten columns">
+  			<label>Table</label>
+  			<table id="result-table"></table>
+  		</div>
+  	</div>
+  </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+  <script>
+  
+	$(document).ready(function(){
+		
+		$("#intro-screen").fadeIn(3000).fadeOut("fast", function(){
+			$("#main-screen").fadeIn(1000);
+		});
+
+		//GLOBAL VARIABLES
+		var traitSize = 2;
+		var resultStat = [];
+		var resultTrait = [];
+
+		$("#table-size").change(function(){
+			if($("#table-size").val() == 0){
+				$("#custom-div").show(500);
+			}
+			else{
+				$("#custom-div").hide(500);
+				var adjustSize = $("#table-size").val();
+				traitTable(adjustSize);
+			}
+		});
+
+		$("#custom-size").keyup(function(){
+			var adjustSize = parseInt($(this).val());
+			if(!isNaN(adjustSize)){
+				if (adjustSize < 2) adjustSize = 1;
+				if (adjustSize > 10) adjustSize = 10;
+				traitTable(adjustSize);
+			}
+		});
+  	
+
+		function traitTable(adjustSize){
+			adjustSize = adjustSize - traitSize;
+			if(adjustSize > 0){
+				for (var i = 0; i < adjustSize; i++) {
+					$("#trait-header").append("<td>Trait "+ (traitSize + i + 1) +"</td>");
+					$("#trait-parent1").append("<td><input type=\"text\" class=\"parent1 input-trait\"></td> required");
+					$("#trait-parent2").append("<td><input type=\"text\" class=\"parent2 input-trait\"></td> required");
+				}
+			}
+			if(adjustSize < 0){
+				var x = Math.abs(adjustSize);
+				for (var i = 0; i < x; i++) {
+					$("#trait-table th:last-child, #trait-table td:last-child").remove();
+				}
+			}
+			traitSize = adjustSize + traitSize;
+		}
+
+		$("#Calculate-Btn").click(function(){
+			var table = $("#result-table");
+			table.empty();
+
+			var parent1 = new Array();
+			$("input[class~=parent1]").each(function() {
+			   parent1.push($(this).val());
+			});
+			var parent2 = new Array();
+			$("input[class~=parent2]").each(function() {
+			   parent2.push($(this).val());
+			});
+
+			var numRowCol = parseInt(Math.pow(2, traitSize));
+
+			var parent1P = mul(parent1);
+			var parent2P = mul(parent2)
+
+			function mul(trait){
+				var p = new Array();
+				var ac = 0;
+				for (var i = 0; i < numRowCol; i++) {
+					var s = "";
+					var bin = ac.toString(2);
+					if(bin.length < traitSize){
+						var times = traitSize - bin.length;
+						while(times > 0){
+							bin = "0" + bin;
+							times--;
+						}
+					
+					}
+					for (var j = 0; j < traitSize; j++) {
+						s += trait[j].charAt(bin.charAt(j));
+					}
+					console.log(s);
+					p.push(s);
+					ac++;
+				}
+				return p;
+			}
+
+			var sizeTable = numRowCol + 1;
+			var numDifTrait = 0;
+			resultStat = [];
+			resultTrait = [];
+			for (var i = 0; i < sizeTable; i++) {
+				var s = "";
+				for (var j = 0; j < sizeTable; j++) {
+					if(i == 0){
+						if (j == 0) {
+							s += "<td>" + "X" + "</td>";
+							continue;
+						}
+						s += "<td>" + parent1P[j - 1] + "</td>";
+						continue;
+					}
+					if(j == 0){
+						s += "<td>" + parent2P[i - 1] + "</td>";
+						continue;
+					}
+					var trait = parent1P[j - 1] + parent2P[i-1];
+					function case_insensitive_comp(strA, strB) {
+					    return strA.toLowerCase().localeCompare(strB.toLowerCase());
+					}
+					trait = trait.split('').sort().sort(case_insensitive_comp).join('');
+					if(resultStat[trait] == null){
+						resultStat[trait] = 1;
+						resultTrait[numDifTrait] = trait;
+						numDifTrait++;
+					}
+					else{
+						resultStat[trait]++;
+					}
+					s += "<td>" + trait + "</td>";
+				}
+				table.append("<tr>" + s + "</tr>");
+			}
+			table = $("#result-stats");
+			table.empty();
+			var numTotal = numRowCol * numRowCol;
+			for (var i = 0; i < resultTrait.length; i++) {
+				table.append("<li>" + resultTrait[i] + ": " + resultStat[resultTrait[i]] + "/" + numTotal +  "</li>"); 
+			}
+			$("#result-div").show(500);
+		});
+	});
+  </script>
+</body>
+</html>
